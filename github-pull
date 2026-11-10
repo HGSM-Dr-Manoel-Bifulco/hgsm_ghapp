@@ -1,0 +1,130 @@
+
+#!/bin/bash
+set -Eeuo pipefail
+
+# Configuração
+AUTH_SCRIPT="/etc/github-app/github-auth"
+
+# Parâmetros
+REPOSITORY="${1:-}"
+DESTINATION="${2:-}"
+BRANCH="${3:-main}"
+
+# Validações
+if [[ -z "$REPOSITORY" ]]; then
+    echo "Uso: github-pull ORGANIZACAO/REPOSITORIO [DESTINO] [BRANCH]" >&2
+    exit 1
+fi
+
+if [[ ! "$REPOSITORY" =~ ^[A-Za-z0-9-]+/[A-Za-z0-9._-]+$ ]]; then
+    echo "ERRO: Formato inválido. Utilize ORGANIZACAO/REPOSITORIO." >&2
+    exit 1
+fi
+
+if [[ $EUID -ne 0 ]]; then
+    echo "ERRO: Execute este script como root (sudo)." >&2
+    exit 1
+fi
+
+if [[ ! -x "$AUTH_SCRIPT" ]]; then
+    echo "ERRO: Script de autenticação não encontrado ou não executável: $AUTH_SCRIPT" >&2
+    exit 1
+fi
+
+# Define destino padrão
+REPO_NAME="${REPOSITORY##*/}"
+DESTINATION="${DESTINATION:-/opt/$REPO_NAME}"
+
+if [[ "$DESTINATION" != /* ]]; then
+    echo "ERRO: O destino deve ser um caminho absoluto." >&2
+    exit 1
+fi
+
+REMOTE_URL="https://github.com/${REPOSITORY}.git"
+
+# Obtém token temporário
+echo "Obtendo autenticação GitHub..." >&2
+TOKEN=$("$AUTH_SCRIPT" "$REPOSITORY")
+
+if [[ -z "$TOKEN" ]]; then
+    echo "ERRO: Não foi possível obter o token de autenticação." >&2
+    exit 1
+fi
+
+# AskPass temporário
+umask 077
+ASKPASS_DIR=$(mktemp -d)
+trap 'rm -rf "$ASKPASS_DIR"; unset TOKEN' EXIT
+
+ASKPASS="$ASKPASS_DIR/askpass"
+
+cat > "$ASKPASS" <<'EOF'
+#!/bin/bash
+
+case "$1" in
+    *Username*)
+        echo "x-access-token"
+        ;;
+    *Password*)
+        printf '%s\n' "$GH_APP_TOKEN"
+        ;;
+    *)
+        exit 1
+        ;;
+esac
+EOF
+
+chmod 700 "$ASKPASS"
+
+export GH_APP_TOKEN="$TOKEN"
+export GIT_ASKPASS="$ASKPASS"
+export GIT_TERMINAL_PROMPT=0
+
+unset TOKEN
+
+# Clone ou Pull
+if [[ ! -e "$DESTINATION" ]]; then
+
+    echo "Clonando $REPOSITORY para $DESTINATION..." >&2
+
+    mkdir -p "$(dirname "$DESTINATION")"
+
+    git -c credential.helper= clone \
+        --branch "$BRANCH" \
+        --single-branch \
+        "$REMOTE_URL" \
+        "$DESTINATION"
+
+    echo "Clone concluído." >&2
+
+else
+
+    if [[ ! -d "$DESTINATION/.git" ]]; then
+        echo "ERRO: O destino existe, mas não é um repositório Git válido: $DESTINATION" >&2
+        exit 1
+    fi
+
+    CURRENT_REMOTE=$(git -C "$DESTINATION" remote get-url origin)
+    CURRENT_BRANCH=$(git -C "$DESTINATION" branch --show-current)
+
+    if [[ "$CURRENT_REMOTE" != "$REMOTE_URL" ]]; then
+        echo "ERRO: A URL do repositório remoto é diferente da esperada." >&2
+        echo "Esperada: $REMOTE_URL" >&2
+        echo "Encontrada: $CURRENT_REMOTE" >&2
+        exit 1
+    fi
+
+    if [[ "$CURRENT_BRANCH" != "$BRANCH" ]]; then
+        echo "ERRO: A branch atual ($CURRENT_BRANCH) difere da solicitada ($BRANCH)." >&2
+        exit 1
+    fi
+
+    echo "Atualizando $REPOSITORY..." >&2
+
+    git -C "$DESTINATION" \
+        -c credential.helper= \
+        pull --ff-only origin "$BRANCH"
+
+    echo "Pull concluído." >&2
+
+fi
