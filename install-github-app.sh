@@ -7,10 +7,9 @@ set -Eeuo pipefail
 # ==========================================================
 
 GITHUB_OWNER="HGSM-Dr-Manoel-Bifulco"
-GITHUB_REPO="HGSM-server-bootstrap"
-GITHUB_VERSION="v1.0.0"
+GITHUB_REPO="hgsm_ghapp"
 
-BASE_URL="https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/${GITHUB_VERSION}"
+BASE_URL="https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/refs/heads/main/"
 
 CONFIG_DIR="/etc/github-app"
 AUTH_DEST="${CONFIG_DIR}/github-auth"
@@ -65,7 +64,7 @@ else
     TEMP_DIR="$(mktemp -d)"
     SOURCE_DIR="$TEMP_DIR"
 
-    echo "Baixando arquivos do GitHub (${GITHUB_VERSION})..."
+    echo "Baixando arquivos do GitHub..."
 
     for FILE in github-auth github-pull config.example; do
         curl -fsSL "${BASE_URL}/${FILE}" -o "${SOURCE_DIR}/${FILE}" \

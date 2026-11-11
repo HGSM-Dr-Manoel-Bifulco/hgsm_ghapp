@@ -5,7 +5,7 @@ Na primeira instalação, com preenchimento interativo:
 
 ````bash
 curl -fsSL \
-  https://raw.githubusercontent.com/HGSM-Dr-Manoel-Bifulco/HGSM-server-bootstrap/v1.0.0/install-github-app.sh \
+  https://raw.githubusercontent.com/HGSM-Dr-Manoel-Bifulco/hgsm_ghapp/refs/heads/main/install-github-app.sh \
   | sudo bash
 ````
 
@@ -14,7 +14,7 @@ Ou informando os IDs diretamente:
 
 ````bash
 curl -fsSL \
-  https://raw.githubusercontent.com/HGSM-Dr-Manoel-Bifulco/HGSM-server-bootstrap/v1.0.0/install-github-app.sh \
+  https://raw.githubusercontent.com/HGSM-Dr-Manoel-Bifulco/hgsm_ghapp/refs/heads/main/install-github-app.sh \
   | sudo bash -s -- APP_ID INSTALLATION_ID
 ````
 
