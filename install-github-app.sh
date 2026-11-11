@@ -53,7 +53,7 @@ fi
 # Localiza os arquivos de origem
 # ==========================================================
 
-SCRIPT_PATH="${BASH_SOURCE[0]:-}"
+SCRIPT_PATH="${BASH_SOURCE:-}"
 
 if [[ -n "$SCRIPT_PATH" && -f "$SCRIPT_PATH" && -f "$(dirname -- "$SCRIPT_PATH")/github-auth" ]]; then
     # Execução local
@@ -114,8 +114,8 @@ else
         APP_ID="$1"
         INSTALLATION_ID="$2"
     else
-        read -r -p "APP_ID (Enter para usar exemplo): " APP_ID
-        read -r -p "INSTALLATION_ID (Enter para usar exemplo): " INSTALLATION_ID
+        read -r -p "APP_ID (Enter para usar exemplo): " APP_ID < /dev/tty
+        read -r -p "INSTALLATION_ID (Enter para usar exemplo): " INSTALLATION_ID < /dev/tty
     fi
 
     if [[ -z "$APP_ID" && -z "$INSTALLATION_ID" ]]; then
