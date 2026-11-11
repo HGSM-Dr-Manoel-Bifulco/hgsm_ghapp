@@ -43,7 +43,7 @@ O comando retornará o token. Como ele é um segredo temporário, evite deixá-l
 ### Teste de pull
 
 ````bash
-sudo github-pull HGSM-Dr-Manoel-Bifulco/HGSM-noc /opt/noc
+sudo github-pull HGSM-Dr-Manoel-Bifulco/[repositorio] [local/de/instalação]
 ````
 
 Uma observação de segurança: o instalador preserva o config existente, mas atualiza os executáveis quando executado novamente. Isso permite atualizar os scripts sem apagar a configuração e a chave privada já instaladas.
