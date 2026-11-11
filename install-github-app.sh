@@ -53,11 +53,11 @@ fi
 # Localiza os arquivos de origem
 # ==========================================================
 
-if [[ -f "${BASH_SOURCE[0]}" && -f "$(dirname "${BASH_SOURCE[0]}")/github-auth" ]]; then
+SCRIPT_PATH="${BASH_SOURCE[0]:-}"
 
+if [[ -n "$SCRIPT_PATH" && -f "$SCRIPT_PATH" && -f "$(dirname -- "$SCRIPT_PATH")/github-auth" ]]; then
     # Execução local
-    SOURCE_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-
+    SOURCE_DIR="$(cd -- "$(dirname -- "$SCRIPT_PATH")" && pwd)"
 else
 
     # Execução via curl | bash
